@@ -114,6 +114,9 @@ mod types;
 #[cfg(feature = "serde")]
 mod serde;
 
+#[cfg(feature = "defmt")]
+mod defmt;
+
 pub use traits::*;
 pub use types::*;
 

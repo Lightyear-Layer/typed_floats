@@ -29,6 +29,8 @@ libm = ["dep:num-traits", "typed_floats_macros/libm"]
 # This will override the `compiler_hints` feature, and adds a little overhead to `new_unchecked`.
 # This feature can be enabled by any parent crate to ensure no undefined behavior.
 ensure_no_undefined_behavior = []
+# Add the `defmt` dependency to implement `defmt::Format` for all types.
+defmt = ["dep:defmt"]
 
 [dependencies]
 rustversion.workspace = true
@@ -52,12 +54,17 @@ optional = true
 [dependencies.const_fn]
 version = "0.4.11"
 
+[dependencies.defmt]
+version = "1.1"
+default-features = false
+optional = true
+
 [dev-dependencies]
 serde_json = { version = "1.0" }
 num-traits = "0.2"
 
 [package.metadata.docs.rs]
-features = ["serde"]
+features = ["serde", "defmt"]
 
 [lints.rust]
 dead-code = { level = "deny", priority = 1 }
