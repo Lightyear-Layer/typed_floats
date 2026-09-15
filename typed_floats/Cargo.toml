@@ -40,7 +40,7 @@ bin-proto = ["dep:bin-proto"]
 rustversion.workspace = true
 
 [dependencies.typed_floats_macros]
-version = "=1.0.7"
+version = "=1.0.8"
 path = "../typed_floats_macros"
 
 [dependencies.serde]

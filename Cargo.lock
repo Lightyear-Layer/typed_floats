@@ -31,7 +31,7 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
 name = "benchmarks"
-version = "1.0.7"
+version = "1.0.8"
 dependencies = [
  "criterion",
  "typed_floats",
@@ -709,7 +709,7 @@ checksum = "d163a63c116ce562a22cda521fcc4d79152e7aba014456fb5eb442f6d6a10109"
 
 [[package]]
 name = "typed_floats"
-version = "1.0.7"
+version = "1.0.8"
 dependencies = [
  "bin-proto",
  "const_fn",
@@ -725,7 +725,7 @@ dependencies = [
 
 [[package]]
 name = "typed_floats_macros"
-version = "1.0.7"
+version = "1.0.8"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -871,7 +871,7 @@ checksum = "1ebf944e87a7c253233ad6766e082e3cd714b5d03812acc24c318f549614536e"
 
 [[package]]
 name = "xtask"
-version = "1.0.7"
+version = "1.0.8"
 dependencies = [
  "toml",
 ]
