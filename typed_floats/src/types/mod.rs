@@ -2,6 +2,7 @@ use const_fn::const_fn;
 
 /// An error that can occur when converting from a string into a typed float
 #[derive(Debug)]
+#[cfg_attr(feature = "proptest", derive(proptest_derive::Arbitrary))]
 pub enum FromStrError {
     /// The string did not contain a valid float number
     ParseFloatError(core::num::ParseFloatError),
@@ -26,6 +27,7 @@ use serde::Serialize;
 
 /// An error that can occur when converting into a typed float
 #[derive(Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "proptest", derive(proptest_derive::Arbitrary))]
 pub enum InvalidNumber {
     /// Any variant of `Nan`
     NaN,

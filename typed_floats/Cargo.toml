@@ -22,7 +22,7 @@ compiler_hints = []
 # Add the `serde` dependency to enable serialization and deserialization of the types.
 serde = ["dep:serde"]
 # Allow to switch between `std` and `no_std` environments.
-std = ["typed_floats_macros/std"]
+std = ["typed_floats_macros/std", "proptest?/std"]
 # Add the `num-traits` dependency to have access to most math functions in `no_std` environments.
 libm = ["dep:num-traits", "typed_floats_macros/libm"]
 # Will `panic!` in release mode instead of risking undefined behavior.
@@ -31,6 +31,8 @@ libm = ["dep:num-traits", "typed_floats_macros/libm"]
 ensure_no_undefined_behavior = []
 # Add the `defmt` dependency to implement `defmt::Format` for all types.
 defmt = ["dep:defmt"]
+# Add the `proptest` dependency to implement `proptest::arbitrary::Arbitrary` for all types.
+proptest = ["dep:proptest", "proptest-derive"]
 
 [dependencies]
 rustversion.workspace = true
@@ -59,12 +61,24 @@ version = "1.0"
 default-features = false
 optional = true
 
+[dependencies.proptest]
+version = "1.0"
+default-features = false
+features = ["alloc", "no_std"]
+optional = true
+
+[dependencies.proptest-derive]
+version = "0.8"
+default-features = false
+features = ["boxed_union"]
+optional = true
+
 [dev-dependencies]
 serde_json = { version = "1.0" }
 num-traits = "0.2"
 
 [package.metadata.docs.rs]
-features = ["serde", "defmt"]
+features = ["serde", "defmt", "proptest"]
 
 [lints.rust]
 dead-code = { level = "deny", priority = 1 }

@@ -17,7 +17,7 @@
 //! let d: NonNaNFinite = a + b;
 //!
 //! assert_eq!(c, 2.0);
-//! assert_eq!(d, 0.0);   
+//! assert_eq!(d, 0.0);
 //! ```
 //!
 //! ```
@@ -28,7 +28,7 @@
 //!
 //! let c: StrictlyPositive = a + b;
 //!
-//! assert_eq!(c, 1.0);   
+//! assert_eq!(c, 1.0);
 //! ```
 //!
 //! Operations that assign the result to the left operand are only
@@ -102,8 +102,8 @@
 #![warn(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
-// `format!` is used during the tests even in `no_std` environments
-#[cfg(all(test, not(feature = "std")))]
+// `alloc` is used for `format!` during the tests, even in `no_std` environments, and by proptest's no-std strategy implementations.
+#[cfg(all(not(feature = "std"), any(test, feature = "proptest")))]
 #[macro_use]
 extern crate alloc;
 
@@ -116,6 +116,9 @@ mod serde;
 
 #[cfg(feature = "defmt")]
 mod defmt;
+
+#[cfg(feature = "proptest")]
+mod proptest;
 
 pub use traits::*;
 pub use types::*;
@@ -165,7 +168,7 @@ pub mod tf64 {
     pub type NegativeFinite = crate::NegativeFinite<f64>;
 
     /// Returns `true` if the number is positive zero.
-    ///     
+    ///
     /// # Examples
     ///
     /// ```
@@ -183,7 +186,7 @@ pub mod tf64 {
     }
 
     /// Returns `true` if the number is negative zero.
-    ///    
+    ///
     /// # Examples
     ///
     /// ```
@@ -503,7 +506,7 @@ pub mod tf32 {
     pub type NegativeFinite = crate::NegativeFinite<f32>;
 
     /// Returns `true` if the number is positive zero.
-    ///     
+    ///
     /// # Examples
     ///
     /// ```
@@ -530,7 +533,7 @@ pub mod tf32 {
     }
 
     /// Returns `true` if the number is negative zero.
-    ///    
+    ///
     /// # Examples
     ///
     /// ```
