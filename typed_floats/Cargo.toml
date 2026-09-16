@@ -33,6 +33,8 @@ ensure_no_undefined_behavior = []
 defmt = ["dep:defmt"]
 # Add the `proptest` dependency to implement `proptest::arbitrary::Arbitrary` for all types.
 proptest = ["dep:proptest", "proptest-derive"]
+# Add the `bin_proto` dependency to implement `bin_proto::BitEncode` and `bin_proto::BitDecode` for all typed float types.
+bin-proto = ["dep:bin-proto"]
 
 [dependencies]
 rustversion.workspace = true
@@ -73,12 +75,17 @@ default-features = false
 features = ["boxed_union"]
 optional = true
 
+[dependencies.bin-proto]
+version = "0.12"
+default-features = false
+optional = true
+
 [dev-dependencies]
 serde_json = { version = "1.0" }
 num-traits = "0.2"
 
 [package.metadata.docs.rs]
-features = ["serde", "defmt", "proptest"]
+features = ["serde", "defmt", "proptest", "bin_proto"]
 
 [lints.rust]
 dead-code = { level = "deny", priority = 1 }

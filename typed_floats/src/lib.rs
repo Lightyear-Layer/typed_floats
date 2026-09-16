@@ -120,6 +120,9 @@ mod defmt;
 #[cfg(feature = "proptest")]
 mod proptest;
 
+#[cfg(feature = "bin-proto")]
+mod bin_proto;
+
 pub use traits::*;
 pub use types::*;
 
