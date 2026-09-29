@@ -16,7 +16,7 @@ rust-version.workspace = true
 bench = false
 
 [features]
-default = ["std", "compiler_hints"]
+default = ["std", "compiler_hints", "proptest"]
 # follows each debug_assert! with core::hint::unreachable_unchecked
 compiler_hints = []
 # Add the `serde` dependency to enable serialization and deserialization of the types.

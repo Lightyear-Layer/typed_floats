@@ -1,109 +1,65 @@
 use proptest::{
-    arbitrary::{any_with, Arbitrary},
-    strategy::{NewTree, Strategy, ValueTree},
-    test_runner::{Reason, TestRunner},
+    arbitrary::Arbitrary,
+    strategy::{FilterMap, Strategy},
 };
+
+use core::ops::RangeInclusive;
 
 use crate::types::{
-    InvalidNumber, Negative, NegativeFinite, NonNaN, NonNaNFinite, NonZeroNonNaN,
-    NonZeroNonNaNFinite, Positive, PositiveFinite, StrictlyNegative, StrictlyNegativeFinite,
-    StrictlyPositive, StrictlyPositiveFinite,
+    Negative, NegativeFinite, NonNaN, NonNaNFinite, NonZeroNonNaN, NonZeroNonNaNFinite, Positive,
+    PositiveFinite, StrictlyNegative, StrictlyNegativeFinite, StrictlyPositive,
+    StrictlyPositiveFinite,
 };
 
-#[derive(Clone, Copy, Debug)]
-pub struct TypedFloatStrategy<T, InnerStrategy> {
-    _marker: core::marker::PhantomData<T>,
-    inner: InnerStrategy,
-}
-
-#[derive(Clone, Copy, Debug)]
-pub struct TypedFloatValueTree<InnerValueTree, TypedFloatType> {
-    inner: InnerValueTree,
-    value: TypedFloatType,
-}
-
-impl<T, InnerStrategy> TypedFloatStrategy<T, InnerStrategy> {
-    const fn new(inner: InnerStrategy) -> Self {
-        Self {
-            _marker: core::marker::PhantomData,
-            inner,
-        }
-    }
+fn into_typed_float<Output, T>(val: T) -> Option<Output>
+where
+    Output: TryFrom<T>,
+{
+    Output::try_from(val).ok()
 }
 
 macro_rules! impl_arbitrary {
-    ($type:ident, $float_type:ty) => {
-        impl<InnerValueTree: ValueTree<Value = $float_type>>
-            TypedFloatValueTree<InnerValueTree, $type<$float_type>>
-        {
-            fn new(inner: InnerValueTree) -> Result<Self, Reason> {
-                $type::<$float_type>::new(inner.current())
-                    .map(|value| Self { inner, value })
-                    .map_err(|e| match e {
-                        InvalidNumber::NaN => "no NaN".into(),
-                        InvalidNumber::Zero => "no zero".into(),
-                        InvalidNumber::Negative => "no negative numbers".into(),
-                        InvalidNumber::Positive => "no positive numbers".into(),
-                        InvalidNumber::Infinite => "no infinite".into(),
-                    })
-            }
-        }
-
-        impl<InnerValueTree: ValueTree<Value = $float_type>> ValueTree
-            for TypedFloatValueTree<InnerValueTree, $type<$float_type>>
-        {
-            type Value = $type<$float_type>;
-
-            fn current(&self) -> Self::Value {
-                self.value
-            }
-
-            fn simplify(&mut self) -> bool {
-                self.inner.simplify()
-            }
-
-            fn complicate(&mut self) -> bool {
-                self.inner.complicate()
-            }
-        }
-
-        impl<InnerStrategy: Strategy<Value = $float_type>> Strategy
-            for TypedFloatStrategy<$type<$float_type>, InnerStrategy>
-        {
-            type Tree = TypedFloatValueTree<InnerStrategy::Tree, $type<$float_type>>;
-            type Value = $type<$float_type>;
-
-            fn new_tree(&self, runner: &mut TestRunner) -> NewTree<Self> {
-                self.inner
-                    .new_tree(runner)
-                    .and_then(TypedFloatValueTree::<InnerStrategy::Tree, $type<$float_type>>::new)
-            }
-        }
-
+    ($type:ident, ($($min:tt)+)..=($($max:tt)+)) => {
+        impl_arbitrary!(@gen, $type, (impl_arbitrary!(@to_expression, f32, $($min)+), impl_arbitrary!(@to_expression, f32, $($max)+)), f32);
+        impl_arbitrary!(@gen, $type, (impl_arbitrary!(@to_expression, f64, $($min)+), impl_arbitrary!(@to_expression, f64, $($max)+)), f64);
+    };
+    (@gen, $type:ident, ($min:expr, $max:expr), $float_type:ty) => {
         impl Arbitrary for $type<$float_type> {
-            type Parameters = <$float_type as Arbitrary>::Parameters;
-            type Strategy = TypedFloatStrategy<Self, <$float_type as Arbitrary>::Strategy>;
+            type Parameters = ();
 
-            fn arbitrary_with(args: Self::Parameters) -> Self::Strategy {
-                TypedFloatStrategy::new(any_with::<$float_type>(args))
+            type Strategy = FilterMap<RangeInclusive<$float_type>, fn($float_type) -> Option<Self>>;
+
+            fn arbitrary_with(_args: Self::Parameters) -> Self::Strategy {
+                (($min)..=($max)).prop_filter_map(
+                    concat!("Must be representable by typed_floats::", stringify!($type), "::<", stringify!($float_type), ">"),
+                    (into_typed_float as fn($float_type) -> Option<Self>),
+                )
             }
         }
     };
-    ($type:ident) => {
-        impl_arbitrary!($type, f32);
-        impl_arbitrary!($type, f64);
+    (@to_expression, $float_type:ty, ($($e:tt)+)) => {
+        impl_arbitrary!(@to_expression, $float_type, $($e)+)
+    };
+    (@to_expression, $float_type:ty, $e:tt . $($chain:tt)*) => {
+        const { impl_arbitrary!(@to_expression, $float_type, $e) . $($chain)+ }
+    };
+    (@to_expression, $float_type:ty, $e:literal) => {
+        ($e as $float_type)
+    };
+    (@to_expression, $float_type:ty, $e:ident) => {
+        <$float_type>::$e
     };
 }
 
-impl_arbitrary!(NonNaN);
-impl_arbitrary!(NonZeroNonNaN);
-impl_arbitrary!(NonNaNFinite);
-impl_arbitrary!(NonZeroNonNaNFinite);
-impl_arbitrary!(Positive);
-impl_arbitrary!(Negative);
-impl_arbitrary!(PositiveFinite);
-impl_arbitrary!(NegativeFinite);
-impl_arbitrary!(StrictlyPositive);
-impl_arbitrary!(StrictlyNegative);
-impl_arbitrary!(StrictlyPositiveFinite);
-impl_arbitrary!(StrictlyNegativeFinite);
+impl_arbitrary!(NonNaN, (NEG_INFINITY)..=(INFINITY));
+impl_arbitrary!(NonZeroNonNaN, (NEG_INFINITY)..=(INFINITY));
+impl_arbitrary!(NonNaNFinite, (MIN)..=(MAX));
+impl_arbitrary!(NonZeroNonNaNFinite, (MIN)..=(MAX));
+impl_arbitrary!(Positive, (0.0)..=(INFINITY));
+impl_arbitrary!(Negative, (NEG_INFINITY)..=(0.0));
+impl_arbitrary!(PositiveFinite, (0.0)..=(MAX));
+impl_arbitrary!(NegativeFinite, (MIN)..=(0.0));
+impl_arbitrary!(StrictlyPositive, (0.0.next_up())..=(INFINITY));
+impl_arbitrary!(StrictlyNegative, (NEG_INFINITY)..=(0.0.next_down()));
+impl_arbitrary!(StrictlyPositiveFinite, (0.0.next_up())..=(MAX));
+impl_arbitrary!(StrictlyNegativeFinite, (MIN)..=(0.0.next_down()));
